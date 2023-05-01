@@ -4,3 +4,7 @@ library(tidyverse)
 
 # Data Import and Cleaning
 predictive_tbl <- readRDS(file = "../data/fulldataset.rds")
+
+# Analysis
+
+# Publication
