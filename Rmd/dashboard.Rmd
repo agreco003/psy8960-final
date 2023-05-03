@@ -1,9 +1,14 @@
 ---
-title: "dashboard.Rmd"
+title: "PSY 8960 Final Project"
 author: "Anthony Greco"
-date: "2023-05-10"
+date: "`r Sys.Date()`"
 output: html_document
-runtime: shiny
+knit: (function(input, ...) {
+    rmarkdown::render(
+      input,
+      output_dir = "../out"
+    )
+  })
 ---
 
 ```{r setup, include=FALSE}
