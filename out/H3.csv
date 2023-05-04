@@ -1,0 +1,5 @@
+Coefficient,Estimate,Std Error,t-value,p < .05
+Intercept, 6.24,.67, 9.28,.00
+Relationship Satisfaction, .37,.23, 1.58,.11
+Gender, .78,.88, .88,.38
+Interaction:Gender*Rel. Sat.,-.43,.30,-1.42,.16
