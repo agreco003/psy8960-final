@@ -22,12 +22,6 @@ predictive_tbl <- readRDS(file = "../data/fulldataset.rds") %>% # clean dataset
          Gender = as.numeric(str_replace_all(Gender, c("Male" = "0", "Female" = "1"))),
          OverTime = as.numeric(str_replace_all(OverTime, c("No" = "0", "Yes" = "1"))), # the above variables have meaningful zeros for specific values, which are retained
          across(.cols = c(Department, EducationField, JobRole, MaritalStatus, Over18), .fns = ~ as.numeric(factor(.)))) # converting them all to numerics for ML, while also building factor structure
-# ,
-#          EducationField = as.numeric(factor(EducationField)),
-#          JobRole = as.numeric(factor(JobRole)),
-#          MaritalStatus = as.numeric(factor(MaritalStatus)),
-#          Over18 = as.numeric(factor(Over18)),  
-#   )
 #####
 # lapply(predictive_tbl, class) # check class of each column
 
@@ -80,23 +74,28 @@ bad_dtm <- DocumentTermMatrix(bad_corpus, control = list(tokenize = myTokenizer)
 
 # Analysis
 ## NLP with each corpus separately for distinct categories
+
 ### Identifying number of topics
 local_cluster <- makeCluster(7)
 registerDoParallel(local_cluster) # Run across multiple cores! Faster.
+
+#### Good Topics
 tuning_good <- FindTopicsNumber(good_dtm,
                            topics = seq(2, 10, by = 1), #originally set between 3 and 30 by 3, then this final restricted range, looking for alignment across models
                            metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"), 
                            verbose = T,
                            control = list(seed =10))
+FindTopicsNumber_plot(tuning_good) # 5 or 6 topics
+
+#### Bad Topics
 tuning_bad <- FindTopicsNumber(bad_dtm,
                                 topics = seq(2, 10, by = 1), #originally set between 3 and 30 by 3, then this final restricted range, looking for alignment across models
                                 metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"), 
                                 verbose = T,
                                 control = list(seed = 10))
-FindTopicsNumber_plot(tuning_good) # 5 or 6 topics
 FindTopicsNumber_plot(tuning_bad) # 4 - 6 topics, 5 looks best
 stopCluster(local_cluster) 
-registerDoSEQ() #closes clusters
+registerDoSEQ()
 
 ### LDA Good comments
 lda_good_results <- LDA(good_dtm, k = 6, method = "Gibbs", control = list(seed = 25)) # with 6 topics, 5 would also be reasonable for this, but made somewhat less sense when looking at betas, commented out below
@@ -126,11 +125,11 @@ lda_bad_gammas <- tidy(lda_bad_results, matrix="gamma") %>%
          bad_topic = topic) %>%
   arrange(employee_id)
 
-### Create a table to interpret results
+### Create a table to interpret all results
 full_predictive_tbl <- predictive_tbl %>%
   full_join(y = lda_bad_gammas, by = join_by(employee_id)) %>%
   full_join(y = lda_good_gammas, by = join_by(employee_id)) %>%
-  select(-gamma.x, -document.x, -topic.x, -gamma.y, -document.y, -topic.y, -q_good, -q_bad) # good and bad topic numbers retained, but comments themselves dropped. Document originally checked to ensure cases matched, which they did!
+  select(-gamma.x, -document.x, -topic.x, -gamma.y, -document.y, -topic.y, -q_good, -q_bad) # good and bad topic numbers retained, but comments themselves dropped. Document and comments were originally checked to ensure cases matched, which they did!
 
 ## Machine Learning models -> Classification task
 set.seed(25)
@@ -142,7 +141,7 @@ holdout_tbl <- full_predictive_tbl[-partition, ]
 fold_indices = createFolds(train_tbl$Attrition, k = 10)
 
 local_cluster <- makeCluster(7)
-registerDoParallel(local_cluster) # Run across multiple cores! Faster.
+registerDoParallel(local_cluster)
 ### Elastic Net Model
 en_model <- train(
   Attrition ~ .,
@@ -150,7 +149,7 @@ en_model <- train(
   method = "glmnet",
   tuneLength = 3,
   na.action = "na.pass", 
-  preProcess = c("nzv", "center", "scale", "bagImpute"), #3 columns have no variance
+  preProcess = c("nzv", "center", "scale", "bagImpute"), #3 columns have no variance, true for all models but only written here
   trControl =  trainControl(
     method = "cv",
     indexOut = fold_indices,
@@ -164,14 +163,14 @@ en_predict <- predict(en_model, holdout_tbl, na.action=na.pass)
 rf_model <- train(
   Attrition ~ .,
   data = train_tbl, 
-  tuneLength = 3, #3 hyperparameters total
+  tuneLength = 3,
   na.action = "na.pass", 
   preProcess = c("nzv", "center", "scale", "bagImpute", "pca"),
-  method = "ranger", #runs random forest model, classification task
+  method = "ranger",
   trControl = trainControl(
     method = "cv", 
     indexOut = fold_indices,
-    verboseIter = TRUE,
+    verboseIter = TRUE
   )
 )
 rf_model
@@ -203,7 +202,7 @@ en_model_nocomment <- train(
   method = "glmnet",
   tuneLength = 3,
   na.action = "na.pass", 
-  preProcess = c("nzv", "center", "scale", "bagImpute"), #3 columns have no variance
+  preProcess = c("nzv", "center", "scale", "bagImpute"),
   trControl =  trainControl(
     method = "cv",
     indexOut = fold_indices,
@@ -244,4 +243,4 @@ ML_models_comments_tbl
 ## Best Model, with and without comments: 
 EN_ML_nocomments_tbl <- filter(full_ml_tbl, algo %in% c("EN_NoComments", "ElasticNet"))
 EN_ML_nocomments_tbl
-## The comment-included model, Elastic Net, performs slightly better, but is functionally about the same. It demonstrates an prediction accuracy in our holdout sample, and a higher kappa overall in that same sample. This suggests the with-comment model may be a little more robust if it were asked to predict new cases from the same population. 
+## The comment-included model, Elastic Net, performs slightly better than the same model without comments. The full model demonstrates higher prediction accuracy in our holdout sample, a higher kappa in our holdout sample, and is more stable when comparing these metrics with their counterparts based on the training data!  This suggests the with-comment model may be a little more robust if it were asked to predict new cases from the same population.
