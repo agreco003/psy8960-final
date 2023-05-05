@@ -1,4 +1,4 @@
-Coefficient,Estimate,Std Error,t-value,p < .05
+Coefficient,Estimate,Std Error,t-value,p
 Intercept, 6.24,.67, 9.28,.00
 Relationship Satisfaction, .37,.23, 1.58,.11
 Gender, .78,.88, .88,.38
