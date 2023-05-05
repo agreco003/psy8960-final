@@ -3,7 +3,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 library(tidyverse)
 library(rstatix)
 library(ggplot2)
-library(jtools) # APA formatting for ggplot!
+library(jtools) # APA formatting for ggplot2!
 
 # Data Import and Cleaning
 statisical_tbl <- readRDS(file = "../data/fulldataset.rds") %>%
@@ -11,13 +11,12 @@ statisical_tbl <- readRDS(file = "../data/fulldataset.rds") %>%
 
 # Analysis
 ## H1
-h1_cor <- cor_test(data = statisical_tbl, vars = c(MonthlyIncome, PerformanceRating), use = "everything")
+h1_cor <- cor_test(data = statisical_tbl, vars = c(MonthlyIncome, PerformanceRating), use = "everything") # Could also use MonthlyRate? Chose Income as a better interpretation of "monthly pay". These two potential pay variables can be very different from each other for each person in the dataset
 h1_cor
 
 ## H2
 h2_anova <- anova_test(data = statisical_tbl, formula = MonthlyIncome ~ Department, dv = MonthlyRate, wid = employee_id, detailed = TRUE)
 h2_anova
-
 
 ## H3 - Base functions allowed
 h3_lm <- lm(YearsAtCompany ~ RelationshipSatisfaction*Gender, data = statisical_tbl)
@@ -27,10 +26,11 @@ h3_lm_result
 # Visualization
 ## Visualization for H1
 (ggplot(statisical_tbl, aes(x = PerformanceRating, y = MonthlyIncome)) +
-    geom_point(size= 0.5) + #no jitter used per notes that jitter is not used for publication, unless one is visualizing big data
+    #geom_point(position = "jitter", size= 0.5) +
+    geom_jitter(width=.2, size = 0.5) + 
     geom_smooth(method = lm, se = FALSE, color = "black", linewidth = .75) +
     labs(x = "Performance Rating", y = "Monthly Income") +
-    scale_x_continuous(limits = c(3,4), breaks = c(3,4)) +
+    scale_x_continuous(limits = c(2.8,4.2), breaks = c(3,4)) + #expanded slightly for jitter
     theme_apa() #no title because titles are not supposed to be on plots, they appear in a heading above, per https://apastyle.apa.org/style-grammar-guidelines/tables-figures/figures
 ) %>%
   ggsave(filename = "../figs/fig_H1.png", dpi = 300, width = 1920, height = 1080, units = "px") # 1920 x 1080 used per notes
@@ -42,7 +42,16 @@ h3_lm_result
     theme_apa() 
   ) %>%
   ggsave(filename = "../figs/fig_H2.png", dpi = 300, width = 1920, height = 1080, units = "px")
+
 ## Visualization for H3
+(ggplot(statisical_tbl, aes(x = RelationshipSatisfaction, y = YearsAtCompany, group = Gender, color = Gender)) +
+    #geom_point(size= 0.5) +
+    geom_jitter(width=.2, size = 0.5) + 
+    geom_smooth(method = lm, se = FALSE) +
+    labs(x = "Relationship Satisfaction", y = "Tenure (years)") +
+    theme_apa() 
+) %>%
+  ggsave(filename = "../figs/fig_H3.png", dpi = 300, width = 1920, height = 1080, units = "px")
 
 # Publication
 ### H1 Table
@@ -59,6 +68,7 @@ h2_tbl <- tibble(Component = h2_anova$Effect, SSn = h2_anova$SSn, SSd = h2_anova
   mutate(across(c(F:p), ~ str_remove(format(round(., 2), nsmall = 2), "^0")))
 h2_tbl
 write_csv(h2_tbl, file = "../out/H2.csv")
+
 ## H2 Interpretation
 paste0("The F-statisic for H2 was F(", h2_tbl$DFn,", ",h2_tbl$DFn,") = ",h2_tbl$F,", p-value = ",h2_tbl$p,". Therefore, H2 was ",ifelse(h2_anova$p > .05, "not ", ""),"supported.")
 
@@ -82,7 +92,7 @@ sentence <- function (name_in_quotes, h3_tibblerow){
   #h3_tbl$p[[h3_tibblerow] d],
   ".")
   print(words)
-} #replaced commented code below, built to improve repeat code. Super proud of this!
+} #replaced commented code below, built to improve repeat code. Found out after re-reading that it wasn't necessary, I think? But didn't want to delete it. Super proud of this!
 sentence("intercept", 1)
 sentence("coefficient for Relationship Satisfaction", 2)
 sentence("coefficient for Gender", 3)
