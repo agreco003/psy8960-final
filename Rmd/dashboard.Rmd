@@ -12,59 +12,39 @@ knit: (function(input, ...) {
 ---
 
 ```{r Script Settings and Resources, include=FALSE}
-
-predictive_tbl <- readRDS(file = "../data/fulldataset.rds") %>% # clean dataset
-  mutate(Attrition = factor(str_replace_all(Attrition, c("No" = "0", "Yes" = "1"))),
-         BusinessTravel = as.numeric(factor(str_replace_all(BusinessTravel, c("Non-Travel" = "0", "Travel_Rarely" = "1", "Travel_Frequently" = "2")))),
-         Gender = as.numeric(str_replace_all(Gender, c("Male" = "0", "Female" = "1"))),
-         OverTime = as.numeric(str_replace_all(OverTime, c("No" = "0", "Yes" = "1"))), # the above variables have meaningful zeros for specific values, which are retained
-         across(.cols = c(Department, EducationField, JobRole, MaritalStatus, Over18), .fns = ~ as.numeric(factor(.)))) 
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+library(tidyverse)
+library(ggplot2)
 ```
 
-This R Markdown document is made interactive using Shiny. Unlike the more traditional workflow of creating static reports, you can now create documents that allow your readers to change the assumptions underlying your analysis and see the results immediately. 
-
-To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
-
-## Inputs and Outputs
-
-You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change.  This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
-
-```{r eruptions, echo=FALSE}
-inputPanel(
-  selectInput("n_breaks", label = "Number of bins:",
-              choices = c(10, 20, 35, 50), selected = 20),
-  
-  sliderInput("bw_adjust", label = "Bandwidth adjustment:",
-              min = 0.2, max = 2, value = 1, step = 0.2)
-)
-
-renderPlot({
-  hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
-       xlab = "Duration (minutes)", main = "Geyser eruption duration")
-  
-  dens <- density(faithful$eruptions, adjust = input$bw_adjust)
-  lines(dens, col = "blue")
-})
+```{r Data Import and Cleaning, include = FALSE}
+skinny_tbl <- readRDS(file = "../out/fulldataset.rds") %>% 
+  mutate(across(.cols = c(Attrition, Gender, Department, EducationField, JobRole), .fns = ~ factor(.))) %>%
+  select(MonthlyIncome, Attrition, JobSatisfaction, Department, EducationField, Gender, JobRole)
 ```
 
-## Embedded Application
+# **Reproducible Image and Online Resources**
+An interactive web app for this data is available by [clicking this link.](link goes here)
 
-It's also possible to embed an entire Shiny application within an R Markdown document using the `shinyAppDir` function. This example embeds a Shiny application located in another directory:
+Explanation of Approach:
+First, all variables designated as potential filters or categorical outcomes were converted to factors, making them easier to filter or produce into results later in the shiny app. Data was then saved as a skinny RDS output. This was written without an else statement so that if no cases, produces no visualization! Therefore no misunderstanding of the data can occur.
+```{r Visualization, include = FALSE}
 
-```{r tabsets, echo=FALSE}
-shinyAppDir(
-  system.file("examples/06_tabsets", package = "shiny"),
-  options = list(
-    width = "100%", height = 550
-  )
-)
+ggplot(skinny_tbl, aes(x = Attrition)) +
+  geom_bar() + 
+  theme_classic()
+
+ggplot(skinny_tbl, aes(x = JobSatisfaction)) +
+  geom_bar() + 
+  theme_classic()
+
+ggplot(skinny_tbl, aes(x = MonthlyIncome)) +
+  geom_histogram(binwidth = 1000) + 
+  theme_classic()
+
 ```
 
-Note the use of the `height` parameter to determine how much vertical space the embedded application should occupy.
-
-You can also use the `shinyApp` function to define an application inline rather then in an external directory.
-
-In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
-
-
-
+```{r Publication, include=FALSE}
+saveRDS(skinny_tbl, file = "../out/skinnydataset.rds")
+saveRDS(skinny_tbl, file = "../shiny/people_dashboard/skinnydataset.rds") #saved to both locations, one for me one to work on and one for the app itself
+```

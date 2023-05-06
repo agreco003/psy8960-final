@@ -14,5 +14,4 @@ final_tbl <- full_join(x = dataset_tbl, y = reviews_tbl, by = join_by(employee_i
   relocate(employee_id, .before = Age) # moved column to the beginning 
 
 # Data Export
-#saveRDS(final_tbl, file = "../data/fulldataset.rds") # saved to data to prevent manual copy paste for first save, commented out because no longer needed
-saveRDS(final_tbl, file = "../out/fulldataset.rds") # saved to out after the first time to prevent overwrite
+saveRDS(final_tbl, file = "../out/fulldataset.rds") # saved to out, imported from there hereafter
