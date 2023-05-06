@@ -12,20 +12,20 @@ library(ldatuning)
 library(caret)
 
 # Data Import and Cleaning for NLP and ML
-## Approach Explanation --> Using NLP to code comments into discrete topics, automating a process I would have done manually for surveys like these in the past. These topics will then be used in various Machine Learning models to complete a classification task: predicting turnover. Further, I have made the decision to treat good and bad comments as separate corpi -- a comment with "nothing" in the good column would be very different than a "nothing" in the bad column, and I want to retain similar distinctions in my dataset. Regex or sentiment analysis would be alternatives, but this is the path that I thought would work best! 
+## Approach Explanation --> Using NLP to categorize comments into discrete topics, automating a process I would have done manually for surveys like these in the past! These topics will then be used in various Machine Learning models to complete a classification task: predicting turnover (Attrition). Further, I have made the decision to treat good and bad comments as separate corpi -- a comment with "nothing" in the good column would be very different than a "nothing" in the bad column, and I want to retain similar distinctions in my dataset. Regex or sentiment analysis could be alternatives, but this is the path that I thought would work best! 
 
 # predictive_tbl <- readRDS(file = "../data/fulldataset.rds") Read original dataset
 # lapply(predictive_tbl, class) # check original class of each column
-predictive_tbl <- readRDS(file = "../out/fulldataset.rds") %>% # clean dataset
+predictive_tbl <- readRDS(file = "../out/fulldataset.rds") %>% # creating an ML friendly dataset
   mutate(Attrition = factor(str_replace_all(Attrition, c("No" = "0", "Yes" = "1"))),
          BusinessTravel = as.numeric(factor(str_replace_all(BusinessTravel, c("Non-Travel" = "0", "Travel_Rarely" = "1", "Travel_Frequently" = "2")))),
          Gender = as.numeric(str_replace_all(Gender, c("Male" = "0", "Female" = "1"))),
-         OverTime = as.numeric(str_replace_all(OverTime, c("No" = "0", "Yes" = "1"))), # the above variables have meaningful zeros for specific values, which are retained
-         across(.cols = c(Department, EducationField, JobRole, MaritalStatus, Over18), .fns = ~ as.numeric(factor(.)))) # converting them all to numerics for ML, while also building factor structure
+         OverTime = as.numeric(str_replace_all(OverTime, c("No" = "0", "Yes" = "1"))), # the above variables have meaningful zeros for specific values within the factor, so those are retained
+         across(.cols = c(Department, EducationField, JobRole, MaritalStatus, Over18), .fns = ~ as.numeric(factor(.)))) # converting them all other factor variables to numerics for ML, while also building factor structure
 #####
 # lapply(predictive_tbl, class) # check class of each column
 
-## Comment Data Intial check
+## Comment Data intial checks, ensuring too many cases aren't lost
 ## Number of missing values
 # predictive_tbl %>% 
 #   filter(q_good != is.na(q_good)) %>% 
@@ -46,10 +46,10 @@ pre_processing <- function(corpus) {
     tm_map(content_transformer(lemmatize_words)) %>% #used a preset dictionary to homogenize word forms
     tm_map(stripWhitespace) %>% #reduced all whitespace to a single space whenever it occurs
     tm_filter(FUN = function(x) {return(nchar(stripWhitespace(x$content)[[1]]) > 1) }) #remove blank cases for LDA
-} # wrote a function because this is long!
+} # wrote a function, because this is long and I'm applying it twice with no changes!
 myTokenizer <- function(x) { 
   NGramTokenizer(x, Weka_control(min=1, max=2)) 
-} #unigrams and bigrams
+} #unigrams and bigrams function, needed later for LDA
 
 ### Good comments Corpus
 good_corpus_original <- VCorpus(VectorSource(predictive_tbl$q_good))
@@ -59,7 +59,7 @@ good_corpus <- pre_processing(good_corpus_original) # Cases count remains the sa
 bad_corpus_original <- VCorpus(VectorSource(predictive_tbl$q_bad))
 bad_corpus <- pre_processing(bad_corpus_original) # Cases count remains the same: 1396
 
-### Pre-processing check - comment out final tm_filter line, and the pipe that preceeds it, in pre_processing function above. Then rerun good_corpus and bad_corpus to use code below
+### Pre-processing check - comment out final tm_filter line, and the pipe that preceeds it, in pre_processing function above. Then rerun good_corpus and bad_corpus to use code below to see the effect of pre-processing
 # compare_them <- function(x, y) { 
 #    index <- sample(1:length(x),1) #set an index
 #    print(x[[index]]$content) #print content of index case x
@@ -69,8 +69,8 @@ bad_corpus <- pre_processing(bad_corpus_original) # Cases count remains the same
 # compare_them(bad_corpus_original, bad_corpus) #run as many times you like for checks. Looks good to me!
 
 ## DTMs
-good_dtm <- DocumentTermMatrix(good_corpus, control = list(tokenize = myTokenizer)) #create a DTM
-bad_dtm <- DocumentTermMatrix(bad_corpus, control = list(tokenize = myTokenizer)) #create a DTM
+good_dtm <- DocumentTermMatrix(good_corpus, control = list(tokenize = myTokenizer)) #create a good comment DTM
+bad_dtm <- DocumentTermMatrix(bad_corpus, control = list(tokenize = myTokenizer)) #create a bad coomment DTM
 
 # Analysis
 ## NLP with each corpus separately for distinct categories
@@ -81,24 +81,24 @@ registerDoParallel(local_cluster) # Run across multiple cores! Faster.
 
 #### Good Topics
 tuning_good <- FindTopicsNumber(good_dtm,
-                           topics = seq(2, 10, by = 1), #originally set between 3 and 30 by 3, then this final restricted range, looking for alignment across models
-                           metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"), 
+                           topics = seq(2, 10, by = 1),
+                           metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"), # looking for alignment across the 4 models, similar to PCA
                            verbose = T,
                            control = list(seed =10))
-FindTopicsNumber_plot(tuning_good) # 5 or 6 topics
+FindTopicsNumber_plot(tuning_good) # Looks like 5 or 6 topics to me!
 
 #### Bad Topics
 tuning_bad <- FindTopicsNumber(bad_dtm,
-                                topics = seq(2, 10, by = 1), #originally set between 3 and 30 by 3, then this final restricted range, looking for alignment across models
+                                topics = seq(2, 10, by = 1),
                                 metrics = c("Griffiths2004", "CaoJuan2009", "Arun2010", "Deveaud2014"), 
                                 verbose = T,
                                 control = list(seed = 10))
-FindTopicsNumber_plot(tuning_bad) # 4 - 6 topics, 5 looks best
+FindTopicsNumber_plot(tuning_bad) # 4 - 6 topics, 5 looks best to me!
 stopCluster(local_cluster) 
 registerDoSEQ()
 
 ### LDA Good comments
-lda_good_results <- LDA(good_dtm, k = 6, method = "Gibbs", control = list(seed = 25)) # with 6 topics, 5 would also be reasonable for this, but made somewhat less sense when looking at betas, commented out below
+lda_good_results <- LDA(good_dtm, k = 6, method = "Gibbs", control = list(seed = 25)) # ultimately chose 6 topics, as the addition of the 6th topic made somewhat more sense when looking at betas. Code to check that commented out below
 # lda_good_betas <- tidy(lda_good_results, matrix="beta") %>%  # Reviewed but not needed for analysis
 #   group_by(topic) %>%
 #   slice_max(n = 5, beta) %>% #top 5 words per topic
@@ -106,14 +106,14 @@ lda_good_results <- LDA(good_dtm, k = 6, method = "Gibbs", control = list(seed =
 # lda_good_betas
 lda_good_gammas <- tidy(lda_good_results, matrix="gamma") %>% 
   group_by(document) %>% 
-  slice_max(n = 1, gamma, with_ties = FALSE) %>% #highest 3 probability per document only, removes ties
+  slice_max(n = 1, gamma, with_ties = FALSE) %>% 
   mutate(employee_id = as.numeric(document),
          good_topic = topic) %>%
-  arrange(employee_id) # probabilities of document containing the topic
+  arrange(employee_id) # This pipe assigns the resulting, highest probability topic to each good comment in the dataset 
 
 ### LDA Bad comments
-lda_bad_results <- LDA(bad_dtm, k = 5, method = "Gibbs", control = list(seed = 25)) # with 5 topics, 4 or 6 would also be reasonable for this per above
-# lda_bad_betas <- tidy(lda_bad_results, matrix="beta") %>% # Reviewed but not needed for analysis
+lda_bad_results <- LDA(bad_dtm, k = 5, method = "Gibbs", control = list(seed = 25)) # with 5 topics, 4 or 6 would also be reasonable for this per above. Checked betas again
+# lda_bad_betas <- tidy(lda_bad_results, matrix="beta") %>%
 #   group_by(topic) %>%
 #   slice_max(n = 5, beta) %>% #top 10 words per topic
 #   arrange(topic, -beta) # probability that word(s) belong in a topic
@@ -125,7 +125,7 @@ lda_bad_gammas <- tidy(lda_bad_results, matrix="gamma") %>%
          bad_topic = topic) %>%
   arrange(employee_id)
 
-### Create a table to interpret all results
+### Create a table to interpret all results, with good and bad comment topics
 full_predictive_tbl <- predictive_tbl %>%
   full_join(y = lda_bad_gammas, by = join_by(employee_id)) %>%
   full_join(y = lda_good_gammas, by = join_by(employee_id)) %>%
@@ -133,10 +133,11 @@ full_predictive_tbl <- predictive_tbl %>%
 
 ## Machine Learning models -> Classification task
 set.seed(25)
-partition <- createDataPartition(full_predictive_tbl$Attrition, p = 0.75, list = FALSE)
+partition <- createDataPartition(full_predictive_tbl$Attrition, p = 0.75, list = FALSE) # 75 - 25 split. 
 train_tbl <- full_predictive_tbl[partition, ]
 train_nocomment_tbl <- predictive_tbl[partition, ] %>%
-  select(-q_good, -q_bad) # Used for publication section later, removes comments from training model and analysis. Same training cases as the full model
+  select(-q_good, -q_bad) # Second tibble with no comments included. Used for comparison with the final, comment-included, model in the publication section. Ensures the same the same training and holdout cases are selected for both as a fair comparison. 
+
 holdout_tbl <- full_predictive_tbl[-partition, ]
 fold_indices = createFolds(train_tbl$Attrition, k = 10)
 
