@@ -43,10 +43,10 @@ server <- function(input, output) {
   skinny_tbl <- readRDS("skinnydataset.rds")
   output$plot <- renderPlot({
     skinny_tbl <- skinny_tbl
-    # Education Filter
+    # Department Filter
     if (input$departmentSelect != "All") {
       skinny_tbl <- skinny_tbl %>%
-        filter(EducationField == input$departmentSelect)
+        filter(Department == input$departmentSelect)
     }
     # Education Filter
     if (input$educationSelect != "All") {
