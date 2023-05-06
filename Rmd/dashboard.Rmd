@@ -19,7 +19,8 @@ library(tidyverse)
 ```{r Data Import and Cleaning, include = FALSE}
 skinny_tbl <- readRDS(file = "../out/fulldataset.rds") %>% 
   mutate(across(.cols = c(Attrition, Gender, Department, EducationField, JobRole), .fns = ~ factor(.))) %>%
-  select(MonthlyIncome, Attrition, JobSatisfaction, Department, EducationField, Gender, JobRole)
+  select(MonthlyIncome, Attrition, JobSatisfaction, Department, EducationField, Gender, JobRole) %>%
+  rename(Monthly_Pay = MonthlyIncome, Turnover_Status = Attrition, Job_Satisfaction = JobSatisfaction)
 ```
 
 # **Reproducible Image and Online Resources**
@@ -30,5 +31,5 @@ First, all variables designated as potential filters or categorical outcomes wer
 
 ```{r Publication, include=FALSE}
 saveRDS(skinny_tbl, file = "../out/skinnydataset.rds")
-#saveRDS(skinny_tbl, file = "../shiny/people_dashboard/skinnydataset.rds") #saved originally to both locations, one in the out folder and one for the app itself to run
+saveRDS(skinny_tbl, file = "../shiny/people_dashboard/skinnydataset.rds") #saved originally to both locations, one in the out folder and one for the app itself to run
 ```

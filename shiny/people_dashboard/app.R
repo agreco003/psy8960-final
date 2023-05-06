@@ -13,8 +13,8 @@ ui <- fluidPage(
       # Drop down selectors
       selectInput("variableSelect",
                   "Outcome Variable of Interest?",
-                  c("MonthlyIncome", "Attrition", "JobSatisfaction"),
-                  selected = "MonthlyIncome"),
+                  c("Monthly_Pay", "Turnover_Status", "Job_Satisfaction"),
+                  selected = "MonthlyPay"),
       selectInput("departmentSelect",
                   "Filter by Department?",
                   c("Human Resources", "Research & Development", "Sales", "All"),
@@ -71,23 +71,23 @@ server <- function(input, output) {
   })
   output$plot <- renderPlot({
     # Plots
-    if (input$variableSelect == "MonthlyIncome") {
+    if (input$variableSelect == "Monthly_Pay") {
       filtered_tbl() %>%
-      ggplot(aes(x = MonthlyIncome)) +
+      ggplot(aes(x = Monthly_Pay)) +
         geom_histogram(binwidth = 1000, color = "white") +
-        labs(x = "Monthly Income", y = "Employee Count") +
+        labs(x = "Monthly Pay", y = "Employee Count") +
         theme_classic()
     }
-    else if (input$variableSelect == "Attrition") {
+    else if (input$variableSelect == "Turnover_Status") {
       filtered_tbl() %>%
-        ggplot(aes(x = Attrition)) +
-        labs(y = "Count of Employees") + 
+        ggplot(aes(x = Turnover_Status)) +
+        labs(x = "Turnover_Status", y = "Count of Employees") + 
         geom_bar() +
         theme_classic()
     }
-    else if (input$variableSelect == "JobSatisfaction") {
+    else if (input$variableSelect == "Job_Satisfaction") {
       filtered_tbl() %>%
-        ggplot(aes(x = JobSatisfaction)) +
+        ggplot(aes(x = Job_Satisfaction)) +
         geom_bar() +
         labs(x = "Job Satisfaction", y = "Count of Employees") + 
         theme_classic()
@@ -95,18 +95,18 @@ server <- function(input, output) {
   })
   output$table <- renderTable({
     # Tables
-    if (input$variableSelect == "MonthlyIncome") {
-      summarize(filtered_tbl(), Mean = mean(MonthlyIncome),
-                SD = sd(MonthlyIncome))
+    if (input$variableSelect == "Monthly_Pay") {
+      summarize(filtered_tbl(), Mean = mean(Monthly_Pay),
+                SD = sd(Monthly_Pay))
     }
-    else if (input$variableSelect == "Attrition") {
-      summarize(filtered_tbl(), Mean = mean(as.numeric(Attrition) - 1),
-                SD = sd(as.numeric(Attrition))
+    else if (input$variableSelect == "Turnover_Status") {
+      summarize(filtered_tbl(), Mean = mean(as.numeric(Turnover_Status) - 1),
+                SD = sd(as.numeric(Turnover_Status))
       )
     }
-    else if (input$variableSelect == "JobSatisfaction") {
-      summarize(filtered_tbl(), Mean = mean(JobSatisfaction),
-                SD = sd(JobSatisfaction)
+    else if (input$variableSelect == "Job_Satisfaction") {
+      summarize(filtered_tbl(), Mean = mean(Job_Satisfaction),
+                SD = sd(Job_Satisfaction)
       )
     }
     if (nrow(filtered_tbl()) == 0) {
