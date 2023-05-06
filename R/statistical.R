@@ -22,6 +22,8 @@ h2_anova
 h3_lm <- lm(YearsAtCompany ~ RelationshipSatisfaction*Gender, data = statisical_tbl)
 h3_lm_result <- summary(h3_lm)
 h3_lm_result
+h3_predicted_tbl <- statisical_tbl %>%
+  add_column(predicted_YearsAtCompany = predict.lm(h3_lm))
 
 # Visualization
 ## Visualization for H1
@@ -43,7 +45,17 @@ h3_lm_result
   ) %>%
   ggsave(filename = "../figs/fig_H2.png", dpi = 300, width = 1920, height = 1080, units = "px")
 
-## Visualization for H3
+## Visualization for H3 - Pick one or the other based on Richard' Feedback
+### Predicted Tenure
+(ggplot(h3_predicted_tbl, aes(x = RelationshipSatisfaction, y = predicted_YearsAtCompany, group = Gender, color = Gender)) +
+    #geom_point(size= 0.5) +
+    geom_jitter(width=.2, size = 0.5) + 
+    geom_smooth(method = lm, se = FALSE) +
+    labs(x = "Relationship Satisfaction", y = "Predicted Tenure (years)") +
+    theme_apa() 
+) %>%
+  ggsave(filename = "../figs/fig_H3.png", dpi = 300, width = 1920, height = 1080, units = "px")
+### Actual Values
 (ggplot(statisical_tbl, aes(x = RelationshipSatisfaction, y = YearsAtCompany, group = Gender, color = Gender)) +
     #geom_point(size= 0.5) +
     geom_jitter(width=.2, size = 0.5) + 
