@@ -64,7 +64,7 @@ server <- function(input, output) {
         filter(JobRole == input$jobSelect)
     }
     # Outcome Filter
-    if (input$variableSelect != "None") {
+    if (input$variableSelect != "None") { #included this to keep the format of the other filters. "None" will never be selected (not an option as an input for the field), so this filter will always be in play! The dynamic results of the plots and table depend on a dynamic outcome variable input -- this allowed me to make that happen at the same time! 
       filtered_skinny_tbl <- filtered_skinny_tbl %>%
         select(input$variableSelect)
     }
@@ -81,6 +81,7 @@ server <- function(input, output) {
     else if (input$variableSelect == "Attrition") {
       filtered_tbl() %>%
         ggplot(aes(x = Attrition)) +
+        labs(y = "Count of Employees") + 
         geom_bar() +
         theme_classic()
     }
@@ -88,7 +89,7 @@ server <- function(input, output) {
       filtered_tbl() %>%
         ggplot(aes(x = JobSatisfaction)) +
         geom_bar() +
-        labs(x = "Job Satisfaction", y = "Employee Count") + 
+        labs(x = "Job Satisfaction", y = "Count of Employees") + 
         theme_classic()
     }
   })
@@ -107,6 +108,9 @@ server <- function(input, output) {
       summarize(filtered_tbl(), Mean = mean(JobSatisfaction),
                 SD = sd(JobSatisfaction)
       )
+    }
+    if (nrow(filtered_tbl()) == 0) {
+      tibble("No employees meet the criteria selected" = "Please change Filters for new results")
     }
   })
 } 
