@@ -2,19 +2,18 @@
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 library(tidyverse)
 library(rstatix)
-library(ggplot2)
 library(jtools) # APA formatting for ggplot2!
 
 # Data Import and Cleaning
-statisical_tbl <- readRDS(file = "../data/fulldataset.rds") %>%
+statisical_tbl <- readRDS(file = "../out/fulldataset.rds") %>%
   mutate(across(.cols = c(Attrition, Department, BusinessTravel, Gender, EducationField, JobRole, MaritalStatus, Over18, OverTime), .fns = ~ factor(.)))
 
 # Analysis
-## H1
+## H1 - No base functions allowed
 h1_cor <- cor_test(data = statisical_tbl, vars = c(MonthlyIncome, PerformanceRating), use = "everything") # Could also use MonthlyRate? Chose Income as a better interpretation of "monthly pay". These two potential pay variables can be very different from each other for each person in the dataset
 h1_cor
 
-## H2
+## H2 - No base functions allowed
 h2_anova <- anova_test(data = statisical_tbl, formula = MonthlyIncome ~ Department, dv = MonthlyRate, wid = employee_id, detailed = TRUE)
 h2_anova
 
@@ -45,25 +44,24 @@ h3_predicted_tbl <- statisical_tbl %>%
   ) %>%
   ggsave(filename = "../figs/fig_H2.png", dpi = 300, width = 1920, height = 1080, units = "px")
 
-## Visualization for H3 - Pick one or the other based on Richard' Feedback
-### Predicted Tenure
+## Visualization for H3: Predicted Tenure
 (ggplot(h3_predicted_tbl, aes(x = RelationshipSatisfaction, y = predicted_YearsAtCompany, group = Gender, color = Gender)) +
     #geom_point(size= 0.5) +
     geom_jitter(width=.2, size = 0.5) + 
     geom_smooth(method = lm, se = FALSE) +
-    labs(x = "Relationship Satisfaction", y = "Predicted Tenure (years)") +
+    labs(x = "Relationship Satisfaction", y = "Predicted Tenure (Years)") +
     theme_apa() 
 ) %>%
   ggsave(filename = "../figs/fig_H3.png", dpi = 300, width = 1920, height = 1080, units = "px")
-### Actual Values
-(ggplot(statisical_tbl, aes(x = RelationshipSatisfaction, y = YearsAtCompany, group = Gender, color = Gender)) +
-    #geom_point(size= 0.5) +
-    geom_jitter(width=.2, size = 0.5) + 
-    geom_smooth(method = lm, se = FALSE) +
-    labs(x = "Relationship Satisfaction", y = "Tenure (years)") +
-    theme_apa() 
-) %>%
-  ggsave(filename = "../figs/fig_H3.png", dpi = 300, width = 1920, height = 1080, units = "px")
+# ### Actual Values
+# (ggplot(statisical_tbl, aes(x = RelationshipSatisfaction, y = YearsAtCompany, group = Gender, color = Gender)) +
+#     #geom_point(size= 0.5) +
+#     geom_jitter(width=.2, size = 0.5) + 
+#     geom_smooth(method = lm, se = FALSE) +
+#     labs(x = "Relationship Satisfaction", y = "Tenure (years)") +
+#     theme_apa() 
+# ) %>%
+#   ggsave(filename = "../figs/fig_H3.png", dpi = 300, width = 1920, height = 1080, units = "px")
 
 # Publication
 ### H1 Table
@@ -73,7 +71,7 @@ h1_tbl <- tibble(h1_cor) %>%
 h1_tbl
 write_csv(h1_tbl, file = "../out/H1.csv")
 ## H1 Interpretation
-paste0("The correlation for H1, the relationship between Performance Rating and Monthly Income, was r(", nrow(statisical_tbl),") = ", h1_tbl$cor,", p-value = ",h1_tbl$p,". Therefore, H1 was ",ifelse(h1_cor$p > .05, "not ", ""),"supported.")
+ifelse(abs(as.numeric("1")) < 1, paste0("The correlation for H1, the relationship between Performance Rating and Monthly Income, was r(", nrow(statisical_tbl),") = ", h1_tbl$cor,", p-value = ",h1_tbl$p,". Therefore, H1 was ",ifelse(h1_cor$p > .05, "not ", ""),"supported."), paste0("Something has gone awry! Calculated correlation > 1."))
 
 ## H2 Table
 h2_tbl <- tibble(Component = h2_anova$Effect, SSn = h2_anova$SSn, SSd = h2_anova$SSd, DFn = h2_anova$DFn, DFd = h2_anova$DFd, F = h2_anova$F, p = h2_anova$p) %>%

@@ -16,7 +16,7 @@ library(caret)
 
 # predictive_tbl <- readRDS(file = "../data/fulldataset.rds") Read original dataset
 # lapply(predictive_tbl, class) # check original class of each column
-predictive_tbl <- readRDS(file = "../data/fulldataset.rds") %>% # clean dataset
+predictive_tbl <- readRDS(file = "../out/fulldataset.rds") %>% # clean dataset
   mutate(Attrition = factor(str_replace_all(Attrition, c("No" = "0", "Yes" = "1"))),
          BusinessTravel = as.numeric(factor(str_replace_all(BusinessTravel, c("Non-Travel" = "0", "Travel_Rarely" = "1", "Travel_Frequently" = "2")))),
          Gender = as.numeric(str_replace_all(Gender, c("Male" = "0", "Female" = "1"))),
