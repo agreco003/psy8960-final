@@ -14,7 +14,6 @@ knit: (function(input, ...) {
 ```{r Script Settings and Resources, include=FALSE}
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 library(tidyverse)
-library(ggplot2)
 ```
 
 ```{r Data Import and Cleaning, include = FALSE}
@@ -28,23 +27,8 @@ An interactive web app for this data is available by [clicking this link.](link 
 
 Explanation of Approach:
 First, all variables designated as potential filters or categorical outcomes were converted to factors, making them easier to filter or produce into results later in the shiny app. Data was then saved as a skinny RDS output. This was written without an else statement so that if no cases, produces no visualization! Therefore no misunderstanding of the data can occur.
-```{r Visualization, include = FALSE}
-
-ggplot(skinny_tbl, aes(x = Attrition)) +
-  geom_bar() + 
-  theme_classic()
-
-ggplot(skinny_tbl, aes(x = JobSatisfaction)) +
-  geom_bar() + 
-  theme_classic()
-
-ggplot(skinny_tbl, aes(x = MonthlyIncome)) +
-  geom_histogram(binwidth = 1000) + 
-  theme_classic()
-
-```
 
 ```{r Publication, include=FALSE}
 saveRDS(skinny_tbl, file = "../out/skinnydataset.rds")
-saveRDS(skinny_tbl, file = "../shiny/people_dashboard/skinnydataset.rds") #saved to both locations, one for me one to work on and one for the app itself
+#saveRDS(skinny_tbl, file = "../shiny/people_dashboard/skinnydataset.rds") #saved originally to both locations, one in the out folder and one for the app itself to run
 ```
