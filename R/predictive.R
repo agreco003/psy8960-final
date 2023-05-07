@@ -239,9 +239,9 @@ full_ml_tbl <- tibble(algo = model_results$models, cv_accuracy, cv_kappa, ho_acc
   
 ML_models_comments_tbl <- filter(full_ml_tbl, algo != "EN_NoComments")
 ML_models_comments_tbl
-## Original Model Selection and Rationale: The glm_net model outperforms the others! Both Accuracy and Kappa are relatively stable from the cv sample to  the holdout sample, when compared with the others. glmnet punishes model complexity, and can help prevent overfitting, something the other models suffered form. 
+## Original Model Selection and Rationale: The glm_net model outperforms the others! Both Accuracy and Kappa, two sways of understanding how well the model predicts real values, are relatively stable from the cv sample to the holdout sample, compared with the others. glmnet, which combines both Lasso and Ridge models, punishes model complexity and extreme coefficient magnitudes. This penalty helps to prevent overfitting! The other models suffered from overfitting pretty severely.  
 
 ## Best Model, with and without comments: 
 EN_ML_nocomments_tbl <- filter(full_ml_tbl, algo %in% c("EN_NoComments", "ElasticNet"))
 EN_ML_nocomments_tbl
-## The comment-included model, Elastic Net, performs slightly better than the same model without comments. The full model demonstrates higher prediction accuracy in our holdout sample, a higher kappa in our holdout sample, and is more stable when comparing these metrics with their counterparts based on the training data!  This suggests the with-comment model may be a little more robust if it were asked to predict new cases from the same population.
+## The comment-included model, Elastic Net, performs slightly better than the same model without comments. The full model demonstrates higher prediction accuracy in our holdout sample, a higher kappa in our holdout sample, and is more stable when comparing these metrics with their counterparts based on the training data! This suggests the with-comment model may be a little more robust if it were asked to predict new cases from the same population.
