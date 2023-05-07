@@ -1,7 +1,7 @@
 library(tidyverse)
 library(shiny)
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # commented out once app was complete
-
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path)) # commented out once app was complete
+##### 
 ui <- fluidPage(
   
   # Application title
@@ -13,7 +13,7 @@ ui <- fluidPage(
       # Drop down selectors
       selectInput("variableSelect",
                   "Outcome Variable of Interest?",
-                  c("Monthly_Pay", "Turnover_Status", "Job_Satisfaction"),
+                  c("Monthly Pay", "Turnover Status", "Job Satisfaction"),
                   selected = "MonthlyPay"),
       selectInput("departmentSelect",
                   "Filter by Department?",
@@ -39,81 +39,64 @@ ui <- fluidPage(
     )
   )
 )
+#####
 server <- function(input, output) {
   skinny_tbl <- readRDS("skinnydataset.rds")
-   filtered_tbl <- reactive({
-    filtered_skinny_tbl <- skinny_tbl
-    # Department Filter
-    if (input$departmentSelect != "All") {
-      filtered_skinny_tbl <- filtered_skinny_tbl %>%
-        filter(Department == input$departmentSelect)
+  reactive <- reactive({
+    selected_tbl <- skinny_tbl
+    
+    if (input$departmentSelect == "All") {
+      selected_tbl <- selected_tbl %>%
+        select(-Department)
     }
     # Education Filter
-    if (input$educationSelect != "All") {
-      filtered_skinny_tbl <- filtered_skinny_tbl %>%
-        filter(EducationField == input$educationSelect)
+    if (input$educationSelect == "All") {
+      selected_tbl <- selected_tbl %>%
+        select(-"Education Field")
     }
     # Gender Filter
-    if (input$genderSelect != "All") {
-      filtered_skinny_tbl <- filtered_skinny_tbl %>%
-        filter(Gender == input$genderSelect)
+    if (input$genderSelect == "All") {
+      selected_tbl <- selected_tbl %>%
+        select(-Gender)
     }
     # Job Filter
-    if (input$jobSelect != "All") {
-      filtered_skinny_tbl <- filtered_skinny_tbl %>%
-        filter(JobRole == input$jobSelect)
+    if (input$jobSelect == "All") {
+      selected_tbl <- selected_tbl %>%
+        select(-"Job Role")
     }
-    # Outcome Filter
-    if (input$variableSelect != "None") { #included this to keep the format of the other filters. "None" will never be selected (not an option as an input for the field), so this filter will always be in play! The dynamic results of the plots and table depend on a dynamic outcome variable input -- this allowed me to make that happen at the same time! 
-      filtered_skinny_tbl <- filtered_skinny_tbl %>%
-        select(input$variableSelect)
-    }
+    selected_tbl
   })
   output$plot <- renderPlot({
-    # Plots
-    if (input$variableSelect == "Monthly_Pay") {
-      filtered_tbl() %>%
-      ggplot(aes(x = Monthly_Pay)) +
+    #Plots
+    if (input$variableSelect == "Monthly Pay") {
+      reactive() %>%
+        ggplot(aes(x = !!sym(input$variableSelect))) +
         geom_histogram(binwidth = 1000, color = "white") +
-        labs(x = "Monthly Pay", y = "Employee Count") +
+        labs(y = "Employee Count") +
         theme_classic()
-    }
-    else if (input$variableSelect == "Turnover_Status") {
-      filtered_tbl() %>%
-        ggplot(aes(x = Turnover_Status)) +
-        labs(x = "Turnover_Status", y = "Count of Employees") + 
+    } else {
+      reactive() %>%
+        ggplot(aes(x = !!sym(input$variableSelect))) +
+        labs(y = "Employee Count") +
         geom_bar() +
-        theme_classic()
-    }
-    else if (input$variableSelect == "Job_Satisfaction") {
-      filtered_tbl() %>%
-        ggplot(aes(x = Job_Satisfaction)) +
-        geom_bar() +
-        labs(x = "Job Satisfaction", y = "Count of Employees") + 
         theme_classic()
     }
   })
   output$table <- renderTable({
     # Tables
-    if (input$variableSelect == "Monthly_Pay") {
-      summarize(filtered_tbl(), Mean = mean(Monthly_Pay),
-                SD = sd(Monthly_Pay))
-    }
-    else if (input$variableSelect == "Turnover_Status") {
-      summarize(filtered_tbl(), Mean = mean(as.numeric(Turnover_Status) - 1),
-                SD = sd(as.numeric(Turnover_Status))
-      )
-    }
-    else if (input$variableSelect == "Job_Satisfaction") {
-      summarize(filtered_tbl(), Mean = mean(Job_Satisfaction),
-                SD = sd(Job_Satisfaction)
-      )
-    }
-    if (nrow(filtered_tbl()) == 0) {
-      tibble("No employees meet the criteria selected" = "Please change Filters for new results")
+    if (input$variableSelect == "Turnover Status") {
+      reactive() %>% 
+            group_by(across(where(is.factor))) %>%
+            summarize(mean = as.numeric(mean(!!sym(input$variableSelect)), na.rm = TRUE),
+                      sd = sd(!!sym(input$variableSelect), na.rm = TRUE))
+    } else {
+      reactive() %>% 
+        group_by(across(where(is.factor))) %>%
+        summarize(mean = mean(!!sym(input$variableSelect), na.rm = TRUE),
+                  sd = sd(!!sym(input$variableSelect), na.rm = TRUE))
     }
   })
 } 
-#Run the application 
+#Run the application
 shinyApp(ui = ui, server = server)
 #rsconnect::deployApp()
