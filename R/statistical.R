@@ -46,7 +46,7 @@ h3_predicted_tbl <- statisical_tbl %>%
 
 ## Visualization for H3: Predicted Tenure
 (ggplot(h3_predicted_tbl, aes(x = RelationshipSatisfaction, y = predicted_YearsAtCompany, group = Gender, color = Gender)) +
-    #geom_point(size= 0.5) + # Same comment as above. If no jitter desired. I felt the jitter add more ease in understanding the data. the data still clusters around the true rating, forming a sort of "bin", but illustrates the volume of data much better. Could also do this with a density plot, this is just my visual preference! 
+    #geom_point(size= 0.5) + # Same comment as above. If no jitter desired. I felt the jitter add some ease in understanding the data. The data still clusters around the true rating, forming a sort of "bin", but illustrates the volume of data much better. Could also do this with a density plot, this is just my visual preference! 
     geom_jitter(width=.2, size = 0.5) + 
     geom_smooth(method = lm, se = FALSE) +
     labs(x = "Relationship Satisfaction", y = "Predicted Tenure (Years)") +
@@ -80,7 +80,7 @@ h2_tbl
 write_csv(h2_tbl, file = "../out/H2.csv")
 
 ## H2 Interpretation
-paste0("The F-statisic for H2 was F(", h2_tbl$DFn,", ",h2_tbl$DFn,") = ",h2_tbl$F,", p-value = ",h2_tbl$p,". Therefore, H2 was ",ifelse(h2_anova$p > .05, "not ", ""),"supported.")
+paste0("The F-statisic for H2 was F(", h2_tbl$DFn,", ",h2_tbl$DFn,") = ",h2_tbl$F,", p-value = ",h2_tbl$p,". Therefore, H2 was ",ifelse(h2_anova$p > .05, "not ", ""),"supported.") #Wasn't necessary,  but didn't want to delete it.
 
 ## H3 Table
 h3_tbl <- tibble('Coefficient' = c("Intercept", "Relationship Satisfaction", "Gender", "Interaction:Gender*Rel. Sat."), "Estimate" = h3_lm_result$coefficients[,"Estimate"],'Std Error' = h3_lm_result$coefficients[,"Std. Error"], 't-value' = h3_lm_result$coefficients[,"t value"], 'p' = h3_lm_result$coefficients[,"Pr(>|t|)"]) %>%
@@ -102,16 +102,8 @@ sentence <- function (name_in_quotes, h3_tibblerow){
   #h3_tbl$p[[h3_tibblerow] d],
   ".")
   print(words)
-} #replaced commented code below, built to improve repeat code. Found out after re-reading that it wasn't necessary, I think? But didn't want to delete it. Super proud of this!
+} #Wasn't necessary,  but started gaining a little more confidence with writing functions. Couldn't bring myself to delete them!
 sentence("intercept", 1)
 sentence("coefficient for Relationship Satisfaction", 2)
 sentence("coefficient for Gender", 3)
 sentence("interaction effect between Satisfaction and Gender", 4) 
-
-# paste0("The Intercept for model H3 was ",ifelse(h3_lm_result$coefficients[[1,"Pr(>|t|)"]] > .05, "not ", ""),"significant, as t(",nrow(statisical_tbl),") = ", h3_tbl[[1,3]],", p-value = ", h3_tbl$p[[1]],".")
-# 
-# paste0("The coefficient for Relationship Satisfaction in model H3 was ",ifelse(h3_lm_result$coefficients[[2,"Pr(>|t|)"]] > .05, "not ", ""),"significant, as t(",nrow(statisical_tbl),") = ", h3_tbl[[2,3]],", p-value = ", h3_tbl$p[[2]],".")
-# 
-# paste0("The coefficient for Gender in model H3 was ",ifelse(h3_lm_result$coefficients[[3,"Pr(>|t|)"]] > .05, "not ", ""),"significant, as t(",nrow(statisical_tbl),") = ", h3_tbl[[3,3]],", p-value = ", h3_tbl$p[[3]],".")
-# 
-# paste0("The coefficient for the interaction between Relationship Satisfaction and Gender in model H3 was ",ifelse(h3_lm_result$coefficients[[4,"Pr(>|t|)"]] > .05, "not ", ""),"significant, as t(",nrow(statisical_tbl),") = ", h3_tbl[[4,3]],", p-value = ", h3_tbl$p[[4]],".")
