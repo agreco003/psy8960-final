@@ -27,7 +27,7 @@ h3_predicted_tbl <- statisical_tbl %>%
 # Visualization
 ## Visualization for H1
 (ggplot(statisical_tbl, aes(x = PerformanceRating, y = MonthlyIncome)) +
-    #geom_point(position = "jitter", size= 0.5) +
+    #geom_point(size= 0.5) + #If no jitter desired. I felt the jitter add more ease in understanding the data. the data still clusters around the true rating, forming a sort of "bin", but illustrates the volume of data much better. Could also do this with a density plot, this is just my visual preference! 
     geom_jitter(width=.2, size = 0.5) + 
     geom_smooth(method = lm, se = FALSE, color = "black", linewidth = .75) +
     labs(x = "Performance Rating", y = "Monthly Income") +
@@ -46,7 +46,7 @@ h3_predicted_tbl <- statisical_tbl %>%
 
 ## Visualization for H3: Predicted Tenure
 (ggplot(h3_predicted_tbl, aes(x = RelationshipSatisfaction, y = predicted_YearsAtCompany, group = Gender, color = Gender)) +
-    #geom_point(size= 0.5) +
+    #geom_point(size= 0.5) + # Same comment as above. If no jitter desired. I felt the jitter add more ease in understanding the data. the data still clusters around the true rating, forming a sort of "bin", but illustrates the volume of data much better. Could also do this with a density plot, this is just my visual preference! 
     geom_jitter(width=.2, size = 0.5) + 
     geom_smooth(method = lm, se = FALSE) +
     labs(x = "Relationship Satisfaction", y = "Predicted Tenure (Years)") +

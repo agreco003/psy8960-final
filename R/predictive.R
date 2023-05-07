@@ -21,7 +21,7 @@ predictive_tbl <- readRDS(file = "../out/fulldataset.rds") %>% # creating an ML 
          BusinessTravel = as.numeric(factor(str_replace_all(BusinessTravel, c("Non-Travel" = "0", "Travel_Rarely" = "1", "Travel_Frequently" = "2")))),
          Gender = as.numeric(str_replace_all(Gender, c("Male" = "0", "Female" = "1"))),
          OverTime = as.numeric(str_replace_all(OverTime, c("No" = "0", "Yes" = "1"))), # the above variables have meaningful zeros for specific values within the factor, so those are retained
-         across(.cols = c(Department, EducationField, JobRole, MaritalStatus, Over18), .fns = ~ as.numeric(factor(.)))) # converting them all other factor variables to numerics for ML, while also building factor structure
+         across(.cols = c(Department, EducationField, JobRole, MaritalStatus, Over18), .fns = ~ as.numeric(factor(.)))) # converting all other factor variables to numerics for ML, while retaining their intended factor structure (EducationField 2 is not twice as good as EducationField 1)
 #####
 # lapply(predictive_tbl, class) # check class of each column
 
@@ -239,7 +239,7 @@ full_ml_tbl <- tibble(algo = model_results$models, cv_accuracy, cv_kappa, ho_acc
   
 ML_models_comments_tbl <- filter(full_ml_tbl, algo != "EN_NoComments")
 ML_models_comments_tbl
-## Original Model Selection and Rationale: The glm_net model outperforms the others! Both Accuracy and Kappa, two sways of understanding how well the model predicts real values, are relatively stable from the cv sample to the holdout sample, compared with the others. glmnet, which combines both Lasso and Ridge models, punishes model complexity and extreme coefficient magnitudes. This penalty helps to prevent overfitting! The other models suffered from overfitting pretty severely.  
+## Original Model Selection and Rationale: The glm_net model outperforms the others! Both Accuracy and Kappa, two sways of understanding how well the model predicts real values, are relatively stable from the cv sample to the holdout sample, compared with the others. There are some key characteristics of this model, and the way it was built, that help it outperform the others. First, glmnet combines both Lasso and Ridge models, punishing model complexity and extreme coefficient magnitudes. This penalty helps to prevent overfitting, which the other models suffered from that. Second, using a (relatively) large training sample, and coercing the data to fit the intended structure of the data, rather than dummy variables probably helped as well! 
 
 ## Best Model, with and without comments: 
 EN_ML_nocomments_tbl <- filter(full_ml_tbl, algo %in% c("EN_NoComments", "ElasticNet"))

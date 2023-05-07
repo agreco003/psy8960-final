@@ -11,7 +11,7 @@
 
 <meta name="author" content="Anthony Greco" />
 
-<meta name="date" content="2023-05-06" />
+<meta name="date" content="2023-05-07" />
 
 <title>PSY 8960 Final Project</title>
 
@@ -352,20 +352,54 @@ display: none;
 
 <h1 class="title toc-ignore">PSY 8960 Final Project</h1>
 <h4 class="author">Anthony Greco</h4>
-<h4 class="date">2023-05-06</h4>
+<h4 class="date">2023-05-07</h4>
 
 </div>
 
 
 <div id="reproducible-image-and-online-resources" class="section level1">
 <h1><strong>Reproducible Image and Online Resources</strong></h1>
-<p>An interactive web app for this data is available by <a href="link%20goes%20here">clicking this link.</a></p>
-<p>Explanation of Approach: First, all variables designated as potential
-filters or categorical outcomes were converted to factors, making them
-easier to filter or produce into results later in the shiny app. Data
-was then saved as a skinny RDS output. This was written without an else
-statement so that if no cases, produces no visualization! Therefore no
-misunderstanding of the data can occur.</p>
+<p><em>The interactive web app described below can be accessed by <a href="https://agreco003.shinyapps.io/people_dashboard/">clicking this
+link.</a></em></p>
+<p><strong>Explanation of Approach:</strong> First, all varaibles that
+would be displayed in plots were converted to what would make sense in
+the plots themselves, so I wouldn’t have to transform most of them in
+the shiny app itself. Then, all variables designated as potential
+filters were converted to factors, making them easier to filter, group,
+or otherwise use later in the shiny app. Data was then exported to an
+RDS output for simplicity.</p>
+<p>Regarding the coding approach for the app itself, I started with my
+UI. It was simple enough: I needed 5 inputs from the user, and needed to
+produce 2 outputs from those inputs. Therefore, I used a simple layout–1
+side panel for filters with a main panel for displayed outputs. The
+plot, which remains the same size in the app at all times, was the first
+output in the main panel, followed underneath by the means and standard
+deviations desired. Then, I moved to the server side.</p>
+<p>Based on the same skinny dataset, I wanted create two separate tables
+that would be updated dynamically and used for the ouput plot and table
+respectively. I produced the underlying table for each output using
+reactive functions, functions designed to be updated repeatedly and
+quickly as people change their selections in the app. The plot function
+filtered results based on inputs, while the table function removes
+columns based on inactive selectors (set to “All” in a given selector).
+To display these ouputs, I used the user-selected inputs directly as
+often as I could, in an effort to prevent the need for additional if
+statements. After some learning about unquoting–using the “!!” operater
+to unquote a single object in a function and a sym() wrapper function to
+convert my dynamic inputs into character strings–I reduced the need for
+duplicate code and if statements!</p>
+<p>Render objects were then used to generate plots, and their outputs
+were added to the app’s UI. Univariate plots were generated with a
+single outcome, selected by the user, and the filters selected by the
+user. Visually, I tried to keep these plots simple and appealing. The
+table output, underneath the plot, generated means and standard
+deviations for whichever outcome, and collection of filtering variables,
+the user selected – all with a single function based on data class. A
+single if-else statement, with only one if, was used for the plot
+output. This allowed for specific formatting to set bin size for the
+Monthly Pay histogram, which was otherwise an eyesore. Collectively,
+this creates a single shiny app with two outputs, based on users’
+selections!</p>
 </div>
 
 
